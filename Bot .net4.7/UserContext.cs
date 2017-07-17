@@ -13,6 +13,6 @@ namespace Bot.net4._7
             : base("DbContext")
         { }
 
-        public DbSet<User> User { get; set; }
+        //public DbSet<User> User { get; set; }
     }
 }

@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using VkNet.Enums;
 using System.Windows.Forms;
 using System.Data.Entity;
+using System.Diagnostics;
 
 namespace Bot.net4._7
 {
@@ -33,9 +34,11 @@ namespace Bot.net4._7
             if (VkAuth())
             {
                 LoadChat();
+                SrchPstGr = new SearchPostsGrp(_api);
+                Stopwatch TimerStart = new Stopwatch();
             }
         }
-        DateTime TimeNow = DateTime.Now;
+        //DateTime TimeNow = DateTime.Now;
         long myID = 84289403;
         long botID = 425112130;
 
@@ -50,11 +53,12 @@ namespace Bot.net4._7
 
         string[] CommandsArray = new string[] { "/status", "/" };
         public VkApi _api = new VkApi();
+
         short countPeopleInChat;
         //List<string> _users = new List<string>(); //id + fName + lName
 
         uint _peerId = 2000000004;
-
+        SearchPostsGrp SrchPstGr;
         private bool VkAuth()
         {
             try
@@ -122,49 +126,21 @@ namespace Bot.net4._7
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var WallSearch = _api.Wall.Get(new WallGetParams
-            {
-                OwnerId = -62560719, //vk.com/club62560719
-                Count = 100,
-                Filter = WallFilter.Others
-            });
-            for (int i = 0; i < 100; i++)
-            {
-                if (WallSearch.WallPosts[0].Text.Contains("id84289403"))
-                {
-                    if (Proverka(WallSearch.WallPosts[i].Date.Value))
-                    {
-                        //if (Members.FindAll(new Action(delegate (string s) { return s.Contains(WallSearch.WallPosts[i].OwnerId.Value.ToString()));
-                        //} Проверка есть ли этот id  в списке!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            SendMess(true, myID, "ПоискПоГруппам");
+            
+            //for (int grp = 0; grp < SrchPstGr.groupsWhereNeedMakePosts.Length; grp++)
+            //{
+            //    //ThreadPool.QueueUserWorkItem(o => SrchPstGr.Start(grp));
+            //    //Thread.Sleep(2000);
+            //    SrchPstGr.Start(grp);
+            //}
 
-                        {
-
-                        }
-                    }
-                    SendMess(true, myID, "da");
-                }
-                else
-                {
-                    //след группа
-                }
-            }
+            SendMess(true, myID, SrchPstGr.TextForMessage());
         }
 
-        private bool Proverka(DateTime time)
+        private void button5_Click(object sender, EventArgs e)
         {
-
-            if (time.Hour < TimeNow.Hour)
-            {
-                if (time.Minute < TimeNow.Minute)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else return false;
+            
         }
 
         //Цикл с проверкой сообщений
@@ -190,10 +166,17 @@ namespace Bot.net4._7
                     if (ReturnReques(message.Messages[0].Body) != null)
                     {
                         //IncomMessEventCl(this, new IncomMessEvent(string.Format(message.Messages[0].Body))); евент
-                        SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
+                        if(message.Messages[0].Body != "/stat")
+                            SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
+                        else
+                        {
+                            SrchPstGr.idWhoNeedCheck = (uint)message.Messages[0].UserId;
+                            SendMess(false, _peerId, SrchPstGr.TextForMessage());
+                        }
+
                     }
                 }
-                catch (Exception ess)
+                catch (Exception)
                 {
                     Enable = false;
                 }
@@ -214,7 +197,7 @@ namespace Bot.net4._7
             switch (mess)
             {
                 case "/stat":
-                    return "Чтение";
+                    return "Подсчет...";
                 case "/info":
                     return "информация";
                 case "Friends":
@@ -246,7 +229,7 @@ namespace Bot.net4._7
                     //_api.Messages.Send(new MessagesSendParams { PeerId = myID, Message = messAddUser });
                     SendMess(false, _peerId, messAddUser);
                 }
-                catch (Exception someExpt)
+                catch (Exception)
                 {
                     Whiiile = false;
                     Thread.Sleep(2000);
@@ -350,6 +333,8 @@ namespace Bot.net4._7
 
             _api.Messages.Send(_params);
         }
+
+        
 
 
         //public ReadOnlyCollection<User> GetChatUsers(IEnumerable<long> chatIds, UsersFields fields, NameCase nameCase)
