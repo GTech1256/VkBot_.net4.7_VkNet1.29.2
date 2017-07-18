@@ -16,7 +16,7 @@ namespace Bot.net4._7
         {
             _api = vkApi;
         }
-        public uint idWhoNeedCheck = 84289403;
+        public uint idWhoNeedCheck = 415625206;//84289403; my id
         private int[] Score = new int[] { 0, 0, 0, 0, 0, 0 };
         public string Text { get; private set; } = "";
         private bool OneMoreHundred = true;
@@ -26,7 +26,7 @@ namespace Bot.net4._7
         
         
 
-        public void Start(int grp)
+        public void Start(object grp)
         {
             OneMoreHundred = true;
             while (OneMoreHundred)
@@ -34,14 +34,13 @@ namespace Bot.net4._7
 
                 var WallSearch = _api.Wall.Search(new WallSearchParams
                 {
-                    OwnerId = groupsWhereNeedMakePosts[(grp)],
-                    Query = "id84289403",
+                    OwnerId = groupsWhereNeedMakePosts[(int)grp], 
+                    Query = "Роман Бакакин",
                     OwnersOnly = false,
                     Count = 100,
                     Offset = offset //смещение
-
-
                 });
+                Thread.Sleep(0);
                 for (int i = 0; i < 100; i++)
                 {
                     if (WallSearch[i].Date.Value.Day != TimeNow.Day)
@@ -49,18 +48,23 @@ namespace Bot.net4._7
                         OneMoreHundred = false;
                         i = 100;
                     }
-                    else if (Proverka(WallSearch[i].Date.Value) && WallSearch[i].FromId == idWhoNeedCheck)
+                    else if (Proverka(WallSearch[i].Date.Value) && WallSearch[i].FromId.Value == idWhoNeedCheck)
                     {
-                        Score[grp]++;
+                        Score[(int)grp]++;
                     }
-                    
-                        
+
+
                 }
-                offset++;
+                if (OneMoreHundred)
+                {
+                    offset++;
+                    Start(grp);
+                }
             }
+            
         }
 
-        public string TextForMessage()
+        public void TextForMessage()
         {
             Text = "";
             for(int i = 0; i < groupsWhereNeedMakePosts.Length; i++)
@@ -76,7 +80,7 @@ namespace Bot.net4._7
                 ScoreAll += Score[i];
             }
             Text += "\n Всего: " + ScoreAll;
-            return Text;
+            _api.Messages.Send(new MessagesSendParams { PeerId = 2000000004 /*UserId = 84289403*/, Message = Text });
         }
         
 

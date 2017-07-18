@@ -34,8 +34,14 @@ namespace Bot.net4._7
             if (VkAuth())
             {
                 LoadChat();
-                SrchPstGr = new SearchPostsGrp(_api);
-                Stopwatch TimerStart = new Stopwatch();
+                Thread.Sleep(500);
+                Thread CheckMess = new Thread(new ThreadStart(CheckMessages));
+                CheckMess.Start();
+
+                //SearchPostsGrp srch = new SearchPostsGrp(_api); проверка на начало
+                //srch.TextForMessage();
+
+                //Stopwatch TimerStart = new Stopwatch(); реализовать таймер для проверки быстроты работы программы
             }
         }
         //DateTime TimeNow = DateTime.Now;
@@ -58,7 +64,7 @@ namespace Bot.net4._7
         //List<string> _users = new List<string>(); //id + fName + lName
 
         uint _peerId = 2000000004;
-        SearchPostsGrp SrchPstGr;
+        //SrchPostsji
         private bool VkAuth()
         {
             try
@@ -122,21 +128,7 @@ namespace Bot.net4._7
             textBox1.Text = countPeopleInChat.ToString();
             SendMess(true, myID, "bot Work");
         }
-
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            SendMess(true, myID, "ПоискПоГруппам");
-            
-            //for (int grp = 0; grp < SrchPstGr.groupsWhereNeedMakePosts.Length; grp++)
-            //{
-            //    //ThreadPool.QueueUserWorkItem(o => SrchPstGr.Start(grp));
-            //    //Thread.Sleep(2000);
-            //    SrchPstGr.Start(grp);
-            //}
-
-            SendMess(true, myID, SrchPstGr.TextForMessage());
-        }
+        
 
         private void button5_Click(object sender, EventArgs e)
         {
@@ -146,8 +138,9 @@ namespace Bot.net4._7
         //Цикл с проверкой сообщений
         private void button3_Click(object sender, EventArgs e)
         {
-            Thread CheckMess = new Thread(new ThreadStart(CheckMessages));
-            CheckMess.Start();
+            //Thread CheckMess = new Thread(new ThreadStart(CheckMessages));
+            //CheckMess.Start();
+            //При запуске проверка на сообщения
         }
 
         private void CheckMessages()
@@ -170,8 +163,11 @@ namespace Bot.net4._7
                             SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
                         else
                         {
+                            SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
+                            SearchPostsGrp SrchPstGr = new SearchPostsGrp(_api);
                             SrchPstGr.idWhoNeedCheck = (uint)message.Messages[0].UserId;
-                            SendMess(false, _peerId, SrchPstGr.TextForMessage());
+                            Thread msg = new Thread(new ThreadStart(new ThreadStart(SrchPstGr.TextForMessage)));
+                            msg.Start();
                         }
 
                     }
@@ -196,12 +192,31 @@ namespace Bot.net4._7
 
             switch (mess)
             {
+                case "/groups":
+                    string textRet = "👇Пиарить только здесь👇";
+                    SearchPostsGrp SrchPstGr = new SearchPostsGrp(_api);
+                    for (int i = 0; i < SrchPstGr.groupsWhereNeedMakePosts.Length; i++)
+                    {
+  
+                        textRet += "\n ✖vk.com/club" + SrchPstGr.groupsWhereNeedMakePosts[i].ToString().Remove(0,1);
+                    }
+                    return textRet;
                 case "/stat":
                     return "Подсчет...";
                 case "/info":
                     return "информация";
                 case "Friends":
-                    return forId;
+                    int pars = 0;
+                    try
+                    {
+                        
+                        Int32.TryParse(forId, out pars);
+                    }
+                    catch (Exception)
+                    {
+                        SendMess(false, _peerId, "Указывать id в виде 'vk.com/xxxxx'");
+                    }
+                    return CheckDidAddFriends(pars);
                 default:
                     return null;
             }
@@ -209,33 +224,60 @@ namespace Bot.net4._7
 
         private void button2_Click(object sender, EventArgs e)
         {
+            
+        }
+
+        private string CheckDidAddFriends(int id)
+        {
+            
+            uIDmembers.Add(id);
             var dict = _api.Friends.AreFriends(uIDmembers);
-            string messAddUser = "";
-            bool Whiiile = true;
+            bool AllAdd = true;
+            //string messAddUser = "";
 
-            while (Whiiile)
+            if (dict[uIDmembers[uIDmembers.Count]] != FriendStatus.NotFriend)
             {
-                try
-                {
-                    for (int a = 0; a < uIDmembers.Count; a++)
-                    {
-                        if (dict[uIDmembers[a]] == FriendStatus.NotFriend && uIDmembers[a] != botID)
-                        {
-                            messAddUser += "\n" + "[id" + uIDmembers[a] + "|" + listBox1.Items[a].ToString() + "]" + " добавь всех в друзья";
-                        }
-                    }
-                    Thread.Sleep(500);
-
-                    //_api.Messages.Send(new MessagesSendParams { PeerId = myID, Message = messAddUser });
-                    SendMess(false, _peerId, messAddUser);
-                }
-                catch (Exception)
-                {
-                    Whiiile = false;
-                    Thread.Sleep(2000);
-                    SendMess(true, myID, "Проверка на друзей УПАЛА");
-                }
+                AllAdd = false;
             }
+
+            //for (int a = 0; a < uIDmembers.Count; a++)
+            //{
+            //    if (dict[uIDmembers[a]] != FriendStatus.NotFriend && uIDmembers[a] != botID)
+            //    {
+            //        AllAdd = false;
+            //    }
+            //}
+
+            string text = (AllAdd) ? "Всех добавил" : "Добавил не всех";
+            return text;
+
+
+
+            //bool Whiiile = true;
+
+            //while (Whiiile)
+            //{
+            //    try
+            //    {
+            //        for (int a = 0; a < uIDmembers.Count; a++)
+            //        {
+            //            if (dict[uIDmembers[a]] == FriendStatus.NotFriend && uIDmembers[a] != botID)
+            //            {
+            //                messAddUser += "\n" + "[id" + uIDmembers[a] + "|" + listBox1.Items[a].ToString() + "]" + " добавь всех в друзья";
+            //            }
+            //        }
+            //        Thread.Sleep(500);
+
+            //        //_api.Messages.Send(new MessagesSendParams { PeerId = myID, Message = messAddUser });
+            //        SendMess(false, _peerId, messAddUser);
+            //    }
+            //    catch (Exception)
+            //    {
+            //        Whiiile = false;
+            //        Thread.Sleep(2000);
+            //        SendMess(true, myID, "Проверка на друзей УПАЛА");
+            //    }
+            //}
         }
 
         public string List(VkApi api)
@@ -333,16 +375,6 @@ namespace Bot.net4._7
 
             _api.Messages.Send(_params);
         }
-
-        
-
-
-        //public ReadOnlyCollection<User> GetChatUsers(IEnumerable<long> chatIds, UsersFields fields, NameCase nameCase)
-        //{
-        //    return ;
-        //}
-
-
     }
 
 
