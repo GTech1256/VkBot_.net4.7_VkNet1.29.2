@@ -72,9 +72,9 @@ namespace Bot.net4._7
             {
                 _api.Authorize(new ApiAuthParams
                 {
-                    ApplicationId = 6099938,
-                    Login = "+79178687319",
-                    Password = "9172357141Rom4ik",
+                    ApplicationId = Convert.ToUInt64(System.IO.File.ReadAllText(@"C:\AppID.txt")),
+                    Login = System.IO.File.ReadAllText(@"C:\login.txt"),
+                    Password = System.IO.File.ReadAllText(@"C:\password.txt"),
                     Settings = Settings.All
                 });
                 return true;
