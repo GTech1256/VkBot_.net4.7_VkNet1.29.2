@@ -27,44 +27,45 @@ namespace Bot.net4._7
 
     public partial class MainForm : System.Windows.Forms.Form
     {
+        List<long> PRmembers = new List<long>(); //Чтоб создать пиар лист
+
+        long myID = 84289403, botID = 425112130, AugustRimID = 400532107, ViktOdinID = 379514877;
+        uint _peerId = 2000000004;
+
+        public VkApi _api = new VkApi();
+
         public MainForm()
         {
             InitializeComponent();
             this.InitializeComponent();
             if (VkAuth())
             {
-                LoadChat();
-                Thread.Sleep(500);
                 Thread CheckMess = new Thread(new ThreadStart(CheckMessages));
                 CheckMess.Start();
 
-                //SearchPostsGrp srch = new SearchPostsGrp(_api); проверка на начало
-                //srch.TextForMessage();
+                PRmembers.Add(myID);//мой
+                PRmembers.Add(AugustRimID);//Август Римский
+                PRmembers.Add(ViktOdinID);//Виктория Одинцова
 
-                //Stopwatch TimerStart = new Stopwatch(); реализовать таймер для проверки быстроты работы программы
+
+                //Проверка каждого 
+                //IList<long> chatIds = new List<long>();
+                //chatIds.Add(4);
+                //var chat = _api.Messages.GetChatUsers(chatIds, UsersFields.Nickname, NameCase.Nom);
+                //foreach (var users in chat)
+                //{
+                //    SearchPostsGrp srch = new SearchPostsGrp(_api);
+                //    srch.idWhoNeedCheck = (uint)users.Id;
+                //    Thread ThForCheck = new Thread(new ThreadStart(srch.TextForMessage));
+                //    ThForCheck.Start();
+                //    Thread.Sleep(5000);
+                //}
             }
         }
-        //DateTime TimeNow = DateTime.Now;
-        long myID = 84289403;
-        long botID = 425112130;
+        
 
-        //public event EventHandler<IncomMessEvent> IncomMessEventCl;// евент в новом классе, подписка на входящие сообщения.
-
-        List<List<string>> Members = new List<List<string>>(); //инициализация
-
-        List<long> uIDmembers = new List<long>();
-
-        //uint[] TOP = new uint[] { };
-
-
-        string[] CommandsArray = new string[] { "/status", "/" };
-        public VkApi _api = new VkApi();
-
-        short countPeopleInChat;
-        //List<string> _users = new List<string>(); //id + fName + lName
-
-        uint _peerId = 2000000004;
-        //SrchPostsji
+        
+        
         private bool VkAuth()
         {
             try
@@ -76,71 +77,10 @@ namespace Bot.net4._7
                     Password = "9172357141Rom4ik",
                     Settings = Settings.All
                 });
-
                 return true;
             }
             catch (VkApiAuthorizationException) { MessageBox.Show("Пароль не верен"); return false; }
             catch (VkApiException) { MessageBox.Show("БОЛЬШЕ КОСТЫЛЕЙ или id не верен"); return false; }
-        }
-
-
-
-
-        private void LoadChat()
-        {
-
-
-            NameCase nom = NameCase.Nom;
-
-            IList<long> chatIds = new List<long>();
-            chatIds.Add(4);
-            var chat = _api.Messages.GetChatUsers(chatIds, UsersFields.Nickname, nom);
-
-            foreach (var users in chat)
-            {
-                int i = 0;
-                if (users.Id != botID)
-                {
-                    uIDmembers.Add(users.Id);
-                    listBox1.Items.Add(users.FirstName + " " + users.LastName);
-                }
-
-
-
-                Members.Add(new List<string>());//добавление новой строки
-                Members[i].Add("asd");//добавление столбца в новую строку
-                i++;
-                //Members[0][0];  //обращение к первому столбцу первой строки
-
-
-                //_users.Add(users.Id + " " + users.FirstName + " " + users.LastName);
-            }
-
-            //ПОЛУЧЕНИЕ IDшников
-            //string text = "";
-            //for (int i = 0; i < _users.Count; i++)
-            //{
-            //    text += _users[i].ToString() + ", ";
-            //}
-            //_api.Messages.Send(new MessagesSendParams { UserId = 84289403, Message = text });
-
-            countPeopleInChat = (Int16)listBox1.Items.Count;
-            textBox1.Text = countPeopleInChat.ToString();
-            SendMess(true, myID, "bot Work");
-        }
-        
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            
-        }
-
-        //Цикл с проверкой сообщений
-        private void button3_Click(object sender, EventArgs e)
-        {
-            //Thread CheckMess = new Thread(new ThreadStart(CheckMessages));
-            //CheckMess.Start();
-            //При запуске проверка на сообщения
         }
 
         private void CheckMessages()
@@ -149,21 +89,22 @@ namespace Bot.net4._7
             while (Enable)
             {
                 Thread.Sleep(1000);
-                try
-                {
+                //try
+                //{
                     var message = _api.Messages.GetHistory(new MessagesGetHistoryParams
                     {
                         Count = 1,
-                        PeerId = _peerId,
+                        //UserId = myID // мой ИД
+                        PeerId = _peerId
                     });
-                    if (ReturnReques(message.Messages[0].Body) != null)
+                    if (ReturnReques(message) != null)
                     {
                         //IncomMessEventCl(this, new IncomMessEvent(string.Format(message.Messages[0].Body))); евент
-                        if(message.Messages[0].Body != "/stat")
-                            SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
+                        if (message.Messages[0].Body != "/stat")
+                            SendMess(false, _peerId, ReturnReques(message));
                         else
                         {
-                            SendMess(false, _peerId, ReturnReques(message.Messages[0].Body));
+                            SendMess(false, _peerId, ReturnReques(message));
                             SearchPostsGrp SrchPstGr = new SearchPostsGrp(_api);
                             SrchPstGr.idWhoNeedCheck = (uint)message.Messages[0].UserId;
                             Thread msg = new Thread(new ThreadStart(new ThreadStart(SrchPstGr.TextForMessage)));
@@ -171,26 +112,20 @@ namespace Bot.net4._7
                         }
 
                     }
-                }
-                catch (Exception)
-                {
-                    Enable = false;
-                }
             }
         }
 
 
-        private string ReturnReques(string mess)
+        private string ReturnReques(MessagesGetObject mess)
         {
             string forId = "";
-            if (mess.Contains("vk.com/id"))
+            if (mess.Messages[0].Body.Contains("vk.com/id"))
             {
-                forId = mess.Substring(9);
-                mess = "Friends";
-
+                forId = mess.Messages[0].Body.Substring(9);
+                mess.Messages[0].Body = "Friends";
             }
 
-            switch (mess)
+            switch (mess.Messages[0].Body)
             {
                 case "/groups":
                     string textRet = "👇Пиарить только здесь👇";
@@ -206,125 +141,84 @@ namespace Bot.net4._7
                 case "/info":
                     return "информация";
                 case "Friends":
+                    return "Не сделано"; // TODO: доделать
+
                     int pars = 0;
-                    try
+                    if (Int32.TryParse(forId, out pars))
                     {
-                        
-                        Int32.TryParse(forId, out pars);
+                        return CheckDidAddFriends(pars);
                     }
-                    catch (Exception)
+                    else
                     {
-                        SendMess(false, _peerId, "Указывать id в виде 'vk.com/xxxxx'");
+                        return "Указывать id в виде 'vk.com/xxxxx'";
                     }
-                    return CheckDidAddFriends(pars);
+
+                case "/list":
+                    return List(mess.Messages[0].UserId.Value);
                 default:
                     return null;
             }
         }
+        
 
-        private void button2_Click(object sender, EventArgs e)
+        private string CheckDidAddFriends(long id)
         {
-            
-        }
-
-        private string CheckDidAddFriends(int id)
-        {
-            
-            uIDmembers.Add(id);
-            var dict = _api.Friends.AreFriends(uIDmembers);
+            List<long> uIDmembers = new List<long>();
+            IList<long> chatIds = new List<long>();
+            chatIds.Add(4);
+            var chat = _api.Messages.GetChatUsers(chatIds, UsersFields.Nickname, NameCase.Nom);
+            string[] text = new string[] { "", "" };
             bool AllAdd = true;
-            //string messAddUser = "";
-
-            if (dict[uIDmembers[uIDmembers.Count]] != FriendStatus.NotFriend)
+            uIDmembers.Add(id);
+            foreach (var users in chat)
             {
-                AllAdd = false;
+                Thread.Sleep(500);
+                if (users.Id != botID && users.Id != id)
+                {
+                    uIDmembers.Add(users.Id);
+                    var dict = _api.Friends.AreFriends(uIDmembers);
+                    if(dict[uIDmembers[1]] == FriendStatus.OutputRequest || dict[uIDmembers[1]] == FriendStatus.Friend || dict[uIDmembers[1]] == FriendStatus.InputRequest)
+                    {
+                        text[0] += "\n vk.com/id" + id + " и vk.com/id" + users.Id + " возможные друзья";
+                    }
+                    else if(dict[uIDmembers[1]] == FriendStatus.NotFriend)
+                    {
+                        AllAdd = false;
+                        text[1] += "\n vk.com/id" + id + " и vk.com/id" + users.Id + " не друзья";
+                    }
+                    uIDmembers.RemoveAt(1);
+                }
             }
 
-            //for (int a = 0; a < uIDmembers.Count; a++)
-            //{
-            //    if (dict[uIDmembers[a]] != FriendStatus.NotFriend && uIDmembers[a] != botID)
-            //    {
-            //        AllAdd = false;
-            //    }
-            //}
-
-            string text = (AllAdd) ? "Всех добавил" : "Добавил не всех";
-            return text;
-
-
-
-            //bool Whiiile = true;
-
-            //while (Whiiile)
-            //{
-            //    try
-            //    {
-            //        for (int a = 0; a < uIDmembers.Count; a++)
-            //        {
-            //            if (dict[uIDmembers[a]] == FriendStatus.NotFriend && uIDmembers[a] != botID)
-            //            {
-            //                messAddUser += "\n" + "[id" + uIDmembers[a] + "|" + listBox1.Items[a].ToString() + "]" + " добавь всех в друзья";
-            //            }
-            //        }
-            //        Thread.Sleep(500);
-
-            //        //_api.Messages.Send(new MessagesSendParams { PeerId = myID, Message = messAddUser });
-            //        SendMess(false, _peerId, messAddUser);
-            //    }
-            //    catch (Exception)
-            //    {
-            //        Whiiile = false;
-            //        Thread.Sleep(2000);
-            //        SendMess(true, myID, "Проверка на друзей УПАЛА");
-            //    }
-            //}
+            SendMess(true, myID, text[0]);
+            SendMess(true, myID, text[1]);
+            
+            string textForRet = (AllAdd) ? "Всех добавил" : "Добавил не всех";
+            return textForRet;
+            
         }
 
-        public string List(VkApi api)
+        public string List(long id)
         {
+            
+            if(PRmembers.Find(x => x == id) == 0)
+            {
+                PRmembers.Add(id);
+            }
 
 
-            string _list = "ஜ════════ஜ۩۞۩ஜ═══════ஜ \n💖💖ХОЧЕШЬ ПО 200 - 300 ЗАЯВОК💖💖 \n🔥🔥 МЕСТА ОГРАНИЧЕНЫ 🔥🔥 \n🔺💠 ДОБАВЛЯЙСЯ КО ВСЕМ 💠🔺 \nஜ════════ஜ۩۞۩ஜ═══════ஜ \n➡👑 ...Администрация... 👑 ⬅\n 🌙✨ *greentech1256(Роман Бакакин) ✨🌙 \n🔥🔞 ТОП🔞 🔥 \n1. - Свободно";
-            //2. - Свободно
-            //3. - Свободно
-            //4. - Свободно
-            //5. - Свободно
+            string _list = "&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972;&#1769;&#1758;&#1769;&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972; \n&#128150;&#128150;ХОЧЕШЬ ПО 200-300а ЗАЯВОК&#128150;&#128150; \n&#128293;&#128293; МЕСТА ОГРАНИЧЕНЫ &#128293;&#128293; \n&#128314;&#128160; ДОБАВЛЯЙСЯ КО ВСЕМ &#128160;&#128314; \n&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972;&#1769;&#1758;&#1769;&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972; \n\n&#128081;..:Создатель:..&#128081; \n&#128041;[id84289403|Роман Бакакин] \n\n&#10145;&#128081; ...Администрация... &#128081; &#11013; \n&#10024; [id400532107|Август Римский] &#10024; \n&#10024;[id379514877|Виктория Одинцова]&#10024; \n\n&#10024;Пиaрщики&#10024;";
+            foreach(int newIdUser in PRmembers)
+            {
+                if (newIdUser != myID && newIdUser != AugustRimID && newIdUser != ViktOdinID)
+                {
+                    string Name = _api.Users.Get(newIdUser).FirstName + " " + _api.Users.Get(newIdUser).LastName;
+                    _list += "\n&#128029;[id" + newIdUser + "|" + Name + "] ";
+                }
+            }
 
-            //💙👑..:V.I.P пиарщики:..👑💙 
-            //1. 👻 *id433827056(Никита Фоминов) 👻 
-            //2. 🌸 *id436004977(Дашуня Ковальская) 🌸 
-            //3. 🈶 *id429927610(Дарья Жолобова) 🈶 
-            //4. - Свободно
-            //5. - Свободно
+            _list += "\n&#128029;Свободно \n&#128029;Свободно\n\n&#128312;&#128312;&#128312;&#128312;&#128312;&#128312;&#128312;&#128312;&#128312;&#128312;&#128312; \n&#128160;Всех добавил(а)? Хочешь в список&#10068;&#128527;&#128160; \n&#9999;Пиши [id400532107|МНЕ] или [id379514877|ЕЙ]&#9999; \n&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972;&#1769;&#1758;&#1769;&#2972;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#2972;";
 
-            //✨🐝Пиaрщики🐝✨ 
-            //1. 😈 *id379514877(Виктория Одинцова) 😈 
-            //2.❤ *id433486431(Максим Перов) ❤ 
-            //3. 😎 *id400532107(Август Римский) 😎 
-            //4. 😏 *id218124385(Андрей Куприянов) 😏 
-            //5. 🌙 *id436085661(Даниэлла Баскервиль) 🌙 
-            //6. 😊 *id399483163(Андрей Вершинин) 😊 
-            //7. 👌*id314917106(Николай Юдин)👌 
-            //8. 🐝 *id429588219(Тина Заяц) 🐝 
-            //9. 💦 *id278673439(Анастасия Лесная)💦 
-            //10. 🐠*id427487493(Марта Шаманенко) 🐠 
-            //11. 🦊*id429855630(Лера Дидковская) 🦊 
-            //12. - Свободно
-            //13. - Свободно
-            //14. - Свободно
-            //15. - Свободно
-            //16. - Свободно
-            //17. - Свободно
-            //18. - Свободно
-            //19. - Свободно
-            //20. - Свободно
-
-            //🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸🔸 
-            //💠Всех добавил(а)? Хочешь в список❔😏💠 
-            //📩Пиши* greentech1256(создателям) ✏ 
-            //ஜ═══════ஜ۩۞۩ஜ══════ஜ⭐⭐";
-
-            SendMess(true, botID, _list);
             return _list;
         }
 

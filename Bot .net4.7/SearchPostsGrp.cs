@@ -16,11 +16,11 @@ namespace Bot.net4._7
         {
             _api = vkApi;
         }
-        public uint idWhoNeedCheck = 415625206;//84289403; my id
+        public uint idWhoNeedCheck = 251227700;
         private int[] Score = new int[] { 0, 0, 0, 0, 0, 0 };
         public string Text { get; private set; } = "";
         private bool OneMoreHundred = true;
-        private int offset = 0;
+        private int offset = 0, countPostLoad = 25;
         DateTime TimeNow = DateTime.Now;
         public int[] groupsWhereNeedMakePosts { private set; get; } = new int[] { -34985835, -33764742, -8337923, -39130136, -32538224, -94946045 };
         
@@ -37,16 +37,16 @@ namespace Bot.net4._7
                     OwnerId = groupsWhereNeedMakePosts[(int)grp], 
                     Query = "Роман Бакакин",
                     OwnersOnly = false,
-                    Count = 100,
+                    Count = countPostLoad,
                     Offset = offset //смещение
                 });
                 Thread.Sleep(0);
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < countPostLoad; i++)
                 {
                     if (WallSearch[i].Date.Value.Day != TimeNow.Day)
                     {
                         OneMoreHundred = false;
-                        i = 100;
+                        i = countPostLoad;
                     }
                     else if (Proverka(WallSearch[i].Date.Value) && WallSearch[i].FromId.Value == idWhoNeedCheck)
                     {
@@ -57,11 +57,10 @@ namespace Bot.net4._7
                 }
                 if (OneMoreHundred)
                 {
-                    offset++;
+                    offset += countPostLoad;
                     Start(grp);
                 }
             }
-            
         }
 
         public void TextForMessage()
@@ -82,11 +81,13 @@ namespace Bot.net4._7
             Text += "\n Всего: " + ScoreAll;
             _api.Messages.Send(new MessagesSendParams { PeerId = 2000000004 /*UserId = 84289403*/, Message = Text });
         }
-        
+
+
+
 
         private bool Proverka(DateTime time)
         {
-            
+
             if (time.Day == TimeNow.Day)
             {
                 if (time.Hour < TimeNow.Hour)
@@ -98,7 +99,7 @@ namespace Bot.net4._7
             }
             else
                 return false;
-        } 
+        }
     }
 
 
